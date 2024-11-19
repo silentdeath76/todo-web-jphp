@@ -1,0 +1,5 @@
+vendor
+.idea
+todo.md
+package-lock.php.yml
+*.db

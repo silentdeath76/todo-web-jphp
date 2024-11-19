@@ -1,0 +1,70 @@
+body {
+    font-family: 'Open Sans', sans-serif;
+}
+
+.header strong {
+    user-select: none;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 80px 20px;
+    border-radius: 10px;
+}
+
+.header {
+    position: fixed;
+    width: 100%;
+    padding: 0 20px;
+    text-align: center;
+    border-bottom: 1px solid rgba(124, 124, 124, 0.1);
+    background: var(--pico-background-color);
+}
+
+.controls {
+    margin-top: 10px;
+    border-bottom: 1px solid rgba(124, 124, 124, 0.1);
+}
+
+#container > .card {
+    display: inline-block;
+    cursor: pointer;
+    width: 220px;
+    height: 220px;
+    padding: 5px 10px;
+    border: 1px solid rgba(124, 124, 124, 0.1);
+    margin: 10px 2px;
+}
+
+.card .title {
+    font-weight: bold;
+    font-size: 0.9em;
+    width: 100%;
+    color: var(--pico-contrast);
+    border-bottom: 1px solid #636363;
+}
+
+.card .details {
+    font-size: 0.8em;
+    color: var(--pico-code-color);
+}
+
+.danger {
+    background-color: #964a50 !important;
+}
+
+.danger:hover {
+    background-color: #913e44 !important;
+}
+
+.dropdown summary {
+    rotate: 90deg;
+    display: contents;
+}
+
+
+
+.dropdown summary::after {
+    visibility: hidden;
+}

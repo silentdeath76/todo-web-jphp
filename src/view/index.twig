@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en" xmlns="http://www.w3.org/1999/html" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <title>Home</title>
+    <link rel="stylesheet" href="static/css/pico.min.css">
+    <link rel="stylesheet" href="static/css/base.css">
+</head>
+<body>
+
+{% include 'header' %}
+
+<div class="container">
+    {% include 'controls' %}
+
+    <div id="container" class="container">
+        <span aria-busy="true" style="text-align: center; display: block;">Loading...</span>
+    </div>
+    <dialog id="card-create" >
+        <article>
+            <header>
+                <button aria-label="Close" rel="prev" onclick="closeModal(document.getElementById('card-create'))"></button>
+                <h3>Создание карточки</h3>
+            </header>
+            <p>
+                <input type="text" id="title">
+                <textarea id="details" cols="30" rows="10"></textarea>
+            </p>
+            <footer>
+                <button class="secondary" onclick="closeModal(document.getElementById('card-create'))">
+                    Cancel
+                </button>
+                <button onclick="createCard()">Confirm</button>
+            </footer>
+        </article>
+    </dialog>
+
+    <dialog id="task-create" >
+        <article>
+            <header>
+                <button aria-label="Close" rel="prev" onclick="closeModal(document.getElementById('task-create'))"></button>
+                <h3>Создание задачи</h3>
+            </header>
+            <p>
+                <input type="text" id="title">
+            </p>
+            <footer>
+                <button class="secondary" onclick="closeModal(document.getElementById('task-create'))">
+                    Cancel
+                </button>
+                <button onclick="createTask()">Confirm</button>
+            </footer>
+        </article>
+    </dialog>
+</div>
+</body>
+<script type="text/javascript" src="static/js/base.js"></script>
+<script src="static/js/modal.js"></script>
+</html>
