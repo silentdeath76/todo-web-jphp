@@ -2,6 +2,7 @@
 
 namespace routes\task;
 
+use core\logger\Logger;
 use entities\task\TaskDraft;
 use php\http\HttpServerRequest;
 use php\http\HttpServerResponse;
@@ -39,8 +40,7 @@ class UpdateTask extends AbstractRoute
         $response->header("Content-Type", "application/json");
 
         if (!is_numeric($cardId)) {
-            var_dump($cardId);
-            // todo logging input data
+            Logger::info(sprintf("Received \$cardId: %s", $cardId));
             $response->body(json_encode(["status" => "error"]));
             return;
         }

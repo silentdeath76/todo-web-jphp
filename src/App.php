@@ -56,7 +56,7 @@ class App
         $this->routeRegister();
 
         Logger::info("Server started");
-        Logger::info("Open in browser http://localhost" . (($this->port == 80) ? "" : $this->port));
+        Logger::info("Open in browser http://localhost" . (($this->port == 80) ? "" : ":" . $this->port));
         Logger::info("Press Ctrl+C to stop server");
 
         $this->server->runInBackground();
