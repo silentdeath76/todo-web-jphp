@@ -5,7 +5,7 @@ namespace routes\card;
 use entities\card\CardDraftData;
 use php\http\HttpServerRequest;
 use php\http\HttpServerResponse;
-use repository\todo\ToDoMemoryRepository;
+use repository\task\TaskMemoryRepository;
 use routes\AbstractRoute;
 
 class CreateCard extends AbstractRoute
@@ -33,6 +33,6 @@ class CreateCard extends AbstractRoute
 
         $card = $this->repository->addCard(new CardDraftData($params["title"], $params["details"]));
 
-        $response->body(json_encode(ToDoMemoryRepository::toArray($card)));
+        $response->body(json_encode(TaskMemoryRepository::toArray($card)));
     }
 }

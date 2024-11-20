@@ -1,18 +1,18 @@
 <?php
 
-namespace routes\todo;
+namespace routes\task;
 
-use entities\todo\ToDoDraft;
+use entities\task\TaskDraft;
 use php\http\HttpServerRequest;
 use php\http\HttpServerResponse;
 use routes\AbstractRoute;
 
-class UpdateTodo extends AbstractRoute
+class UpdateTask extends AbstractRoute
 {
 
     public function getPath(): string
     {
-        return '/todos/{id}';
+        return '/tasks/{id}';
     }
 
     public function getMethod(): string
@@ -46,9 +46,9 @@ class UpdateTodo extends AbstractRoute
         }
 
 
-        $result = $this->repository->updateToDo(
+        $result = $this->repository->updateTask(
             (int)$request->attribute("id"),
-            new ToDoDraft($title, $done, $cardId)
+            new TaskDraft($title, $done, $cardId)
         );
 
         $response->body(json_encode(["status" => $result ? "ok" : "error"]));

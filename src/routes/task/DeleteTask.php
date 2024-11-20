@@ -1,17 +1,17 @@
 <?php
 
-namespace routes\todo;
+namespace routes\task;
 
 use php\http\HttpServerRequest;
 use php\http\HttpServerResponse;
 use routes\AbstractRoute;
 
-class DeleteTodo extends AbstractRoute
+class DeleteTask extends AbstractRoute
 {
 
     public function getPath(): string
     {
-        return '/todos/{id}';
+        return '/tasks/{id}';
     }
 
     public function getMethod(): string
@@ -21,7 +21,7 @@ class DeleteTodo extends AbstractRoute
 
     public function __invoke(HttpServerRequest $request, HttpServerResponse $response)
     {
-        $result = $this->repository->removeTodo($request->attribute("id"));
+        $result = $this->repository->removeTask($request->attribute("id"));
         $response->body(json_encode(["status" => $result ? "ok" : "error"]));
     }
 }

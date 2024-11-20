@@ -1,8 +1,8 @@
 <?php
 
-namespace entities\todo;
+namespace entities\task;
 
-class ToDo
+class Task
 {
     /**
      * @var mixed
@@ -66,7 +66,7 @@ class ToDo
         ];
     }
 
-    public function update(ToDoDraft $draft)
+    public function update(TaskDraft $draft)
     {
         $this->title = $draft->title;
         $this->done = $draft->done;

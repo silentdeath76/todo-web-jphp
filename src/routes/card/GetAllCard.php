@@ -4,7 +4,7 @@ namespace routes\card;
 
 use php\http\HttpServerRequest;
 use php\http\HttpServerResponse;
-use repository\todo\ToDoMemoryRepository;
+use repository\task\TaskMemoryRepository;
 use routes\AbstractRoute;
 
 class GetAllCard extends AbstractRoute
@@ -13,7 +13,7 @@ class GetAllCard extends AbstractRoute
     public function __invoke(HttpServerRequest $request, HttpServerResponse $response)
     {
         $response->header("Content-Type", "application/json");
-        $response->body(json_encode(ToDoMemoryRepository::toArray($this->repository->getAllCards()),  JSON_UNESCAPED_UNICODE));
+        $response->body(json_encode(TaskMemoryRepository::toArray($this->repository->getAllCards()),  JSON_UNESCAPED_UNICODE));
     }
 
     public function getMethod(): string

@@ -42,7 +42,7 @@ function makeRow(id, title, done, cardId) {
             label.classList.remove('checked');
         }
 
-        makeAjaxRequest('/todos/' + id, 'PUT',
+        makeAjaxRequest('/tasks/' + id, 'PUT',
             JSON.stringify({
                 "title": title,
                 "done": checkbox.checked,
@@ -128,7 +128,7 @@ function makeCardList() {
 }
 
 function makeRowList(id) {
-    makeAjaxRequest('/todos/card/' + id, "GET", null, function (response) {
+    makeAjaxRequest('/tasks/card/' + id, "GET", null, function (response) {
         document.getElementById('container').innerHTML = null;
         document.getElementById('rollback').style.visibility = 'visible';
 
@@ -159,7 +159,7 @@ function createCard() {
 function createTask() {
     let task = document.getElementById("task-create").getElementsByTagName("input").item(0).value
 
-    makeAjaxRequest("/todos", "POST", JSON.stringify({
+    makeAjaxRequest("/tasks", "POST", JSON.stringify({
         "id": cardId,
         "title": task
     }), function (params) {

@@ -4,7 +4,7 @@ namespace routes\card;
 
 use php\http\HttpServerRequest;
 use php\http\HttpServerResponse;
-use repository\todo\ToDoMemoryRepository;
+use repository\task\TaskMemoryRepository;
 use routes\AbstractRoute;
 
 class GetByIdCard extends AbstractRoute
@@ -36,6 +36,6 @@ class GetByIdCard extends AbstractRoute
         }
 
         $response->header("Content-Type", "application/json");
-        $response->write(json_encode(ToDoMemoryRepository::toArray($todo)));
+        $response->write(json_encode(TaskMemoryRepository::toArray($todo)));
     }
 }

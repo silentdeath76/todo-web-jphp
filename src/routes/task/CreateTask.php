@@ -1,29 +1,29 @@
 <?php
 
-namespace routes\todo;
+namespace routes\task;
 
-use entities\todo\ToDoDraft;
+use entities\task\TaskDraft;
 use php\http\HttpServerRequest;
 use php\http\HttpServerResponse;
-use repository\todo\ToDoMemoryRepository;
+use repository\task\TaskMemoryRepository;
 use routes\AbstractRoute;
 
-class CreateTodo extends AbstractRoute
+class CreateTask extends AbstractRoute
 {
 
     public function __invoke(HttpServerRequest $request, HttpServerResponse $response)
     {
         $params = json_decode(json_decode($request->bodyStream()->readFully()), true);
 
-        $todo = $this->repository->addToDo(new ToDoDraft($params["title"], (bool)$params["done"] ?? false, $params["id"]));
+        $todo = $this->repository->addTask(new TaskDraft($params["title"], (bool)$params["done"] ?? false, $params["id"]));
 
         $response->header("Content-Type", "application/json");
-        $response->body(json_encode(ToDoMemoryRepository::toArray($todo)));
+        $response->body(json_encode(TaskMemoryRepository::toArray($todo)));
     }
 
     public function getPath(): string
     {
-        return "/todos";
+        return "/tasks";
     }
 
     public function getMethod(): string

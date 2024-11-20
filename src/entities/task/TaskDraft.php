@@ -1,8 +1,8 @@
 <?php
 
-namespace entities\todo;
+namespace entities\task;
 
-class ToDoDraft
+class TaskDraft
 {
     public $title;
     public $done;

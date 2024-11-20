@@ -1,17 +1,17 @@
 <?php
 
-namespace routes\todo;
+namespace routes\task;
 
 use core\logger\Logger;
 use php\http\{HttpServerRequest, HttpServerResponse};
-use repository\todo\ToDoMemoryRepository;
+use repository\task\TaskMemoryRepository;
 use routes\AbstractRoute;
 
-class GetToDoForCard extends AbstractRoute
+class GetTaskForCard extends AbstractRoute
 {
     public function getPath(): string
     {
-        return "/todos/card/{id}";
+        return "/tasks/card/{id}";
     }
 
     public function getMethod(): string
@@ -29,8 +29,8 @@ class GetToDoForCard extends AbstractRoute
             return;
         }
 
-        $result = $this->repository->getToDoForCard($request->attribute("id"));
+        $result = $this->repository->getTaskForCard($request->attribute("id"));
 
-        $response->body(json_encode(ToDoMemoryRepository::toArray($result)));
+        $response->body(json_encode(TaskMemoryRepository::toArray($result)));
     }
 }

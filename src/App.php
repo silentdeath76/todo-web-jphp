@@ -7,22 +7,22 @@ use repository\account\AccountDBRepository;
 use repository\card\CardDBRepository;
 use routes\account\CreateAccount;
 use routes\statics\StaticRoutes;
-use repository\todo\{TodoDBRepository, ToDoMemoryRepository, ToDoRepository};
+use repository\task\{TaskDBRepository, TaskMemoryRepository, TaskRepository};
 use routes\card\{CreateCard, DeleteCard, GetAllCard, GetByIdCard, UpdateCard};
-use routes\todo\{CreateTodo, DeleteTodo, GetAllTodos, GetByIdTodos, GetToDoForCard, UpdateTodo};
+use routes\task\{CreateTask, DeleteTask, GetAllTask, GetByIdTask, GetTaskForCard, UpdateTask};
 use twig\{TwigEngine, TwigStreamLoader};
 
 class App
 {
-    const APP_NAME = 'ToDo App';
+    const APP_NAME = 'Task App';
 
 
     private $port = 80;
 
     /**
-     * @var ToDoRepository
+     * @var TaskRepository
      */
-    private $toDoRepository;
+    private $taskRepository;
 
 
     private $cardRepository;
@@ -70,20 +70,20 @@ class App
     {
         $this->routes->register(new StaticRoutes());
 
-        // todos
-        $this->routes->register(new GetAllTodos($this->toDoRepository));
-        $this->routes->register(new GetByIdTodos($this->toDoRepository));
-        $this->routes->register(new CreateTodo($this->toDoRepository));
-        $this->routes->register(new UpdateTodo($this->toDoRepository));
-        $this->routes->register(new DeleteTodo($this->toDoRepository));
-        $this->routes->register(new GetToDoForCard($this->toDoRepository));
-
         // cards
         $this->routes->register(new CreateCard($this->cardRepository));
         $this->routes->register(new DeleteCard($this->cardRepository));
         $this->routes->register(new GetAllCard($this->cardRepository));
         $this->routes->register(new GetByIdCard($this->cardRepository));
         $this->routes->register(new UpdateCard($this->cardRepository));
+
+        // tasks
+        $this->routes->register(new GetAllTask($this->taskRepository));
+        $this->routes->register(new GetByIdTask($this->taskRepository));
+        $this->routes->register(new CreateTask($this->taskRepository));
+        $this->routes->register(new UpdateTask($this->taskRepository));
+        $this->routes->register(new DeleteTask($this->taskRepository));
+        $this->routes->register(new GetTaskForCard($this->taskRepository));
 
         // Accounts
         $this->routes->register(new CreateAccount($this->accountRepository)); // todo test it
@@ -115,7 +115,7 @@ class App
         $dbFile = "mysqli.db";
 
         $this->cardRepository = new CardDBRepository($dbFile);
-        $this->toDoRepository = new TodoDBRepository($dbFile);
+        $this->taskRepository = new TaskDBRepository($dbFile);
         $this->accountRepository = new AccountDBRepository($dbFile);
     }
 
@@ -130,6 +130,6 @@ class App
 
     private function requestLogHandler(HttpServerRequest $request)
     {
-        echo "Request: " . $request->method() . " " . $request->path() . "\n";
+        Logger::info(sprintf("Request: %s %s", $request->method(), $request->path()));
     }
 }

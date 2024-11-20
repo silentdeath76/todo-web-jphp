@@ -4,7 +4,7 @@ namespace routes;
 
 use php\http\HttpServerRequest;
 use php\http\HttpServerResponse;
-use repository\todo\ToDoRepository;
+use repository\task\TaskRepository;
 
 abstract class AbstractRoute
 {
@@ -27,7 +27,7 @@ abstract class AbstractRoute
 
     abstract public function __invoke(HttpServerRequest $request, HttpServerResponse $response);
 
-    public function setRepository(ToDoRepository $repository)
+    public function setRepository(TaskRepository $repository)
     {
         $this->repository = $repository;
     }

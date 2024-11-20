@@ -1,12 +1,12 @@
 <?php
 
-namespace repository\todo;
+namespace repository\task;
 
-use entities\todo\ToDo;
-use entities\todo\ToDoDraft;
+use entities\task\Task;
+use entities\task\TaskDraft;
 use repository\AbstractRepository;
 
-class ToDoMemoryRepository extends AbstractRepository implements ToDoRepository
+class TaskMemoryRepository extends AbstractRepository implements TaskRepository
 {
     public function __construct()
     {
@@ -18,25 +18,25 @@ class ToDoMemoryRepository extends AbstractRepository implements ToDoRepository
 
 
     /**
-     * @return array|ToDo[]
+     * @return array|Task[]
      */
-    public function getAllToDos(): array
+    public function getAllTask(): array
     {
         return $this->itemsList;
     }
 
     /**
      * @param int $id
-     * @return ToDo
+     * @return Task
      */
-    public function getToDo(int $id): ?ToDo
+    public function getTask(int $id): ?Task
     {
         return flow($this->itemsList)->findOne(function ($item) use ($id) {
             return $item->getId() === $id;
         });
     }
 
-    public function addToDo(ToDoDraft $draft): ToDo
+    public function addTask(TaskDraft $draft): Task
     {
         $index = 0;
 
@@ -44,12 +44,12 @@ class ToDoMemoryRepository extends AbstractRepository implements ToDoRepository
             $index = $this->itemsList[count($this->itemsList) - 1]->getId() + 1;
         }
 
-        $this->itemsList[] = $item = new ToDo($index, $draft->title, $draft->done, $draft->cardId);
+        $this->itemsList[] = $item = new Task($index, $draft->title, $draft->done, $draft->cardId);
 
         return $item;
     }
 
-    public function removeTodo(int $id): bool
+    public function removeTask(int $id): bool
     {
         foreach ($this->itemsList as $key => $toDo) {
             if ($toDo->getId() === $id) {
@@ -62,9 +62,9 @@ class ToDoMemoryRepository extends AbstractRepository implements ToDoRepository
         return false;
     }
 
-    public function updateToDo(int $id, ToDoDraft $draft): bool
+    public function updateTask(int $id, TaskDraft $draft): bool
     {
-        $item = $this->getToDo($id);
+        $item = $this->getTask($id);
 
         if ($item == null) {
             return false;
@@ -75,7 +75,7 @@ class ToDoMemoryRepository extends AbstractRepository implements ToDoRepository
         return true;
     }
 
-    public function getToDoForCard(int $cardId): array
+    public function getTaskForCard(int $cardId): array
     {
         return array_filter($this->itemsList,
             fn($item) => $item->getCardId() === $cardId);

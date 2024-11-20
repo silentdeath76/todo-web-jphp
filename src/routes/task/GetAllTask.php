@@ -1,23 +1,23 @@
 <?php
 
-namespace routes\todo;
+namespace routes\task;
 
 use php\http\HttpServerRequest;
 use php\http\HttpServerResponse;
-use repository\todo\ToDoMemoryRepository;
+use repository\task\TaskMemoryRepository;
 use routes\AbstractRoute;
 
-class GetAllTodos extends AbstractRoute
+class GetAllTask extends AbstractRoute
 {
     public function getPath(): string
     {
-        return "/todos";
+        return "/tasks";
     }
 
 
     public function __invoke(HttpServerRequest $request, HttpServerResponse $response)
     {
         $response->header("Content-Type", "application/json");
-        $response->write(json_encode(ToDoMemoryRepository::toArray($this->repository->getAllToDos())));
+        $response->write(json_encode(TaskMemoryRepository::toArray($this->repository->getAllTask())));
     }
 }
