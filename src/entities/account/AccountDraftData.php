@@ -2,6 +2,8 @@
 
 namespace entities\account;
 
+use routes\account\CreateAccount;
+
 class AccountDraftData
 {
     public $username;
@@ -14,9 +16,9 @@ class AccountDraftData
      * @param $username
      * @param $password
      * @param $email
-     * @param $role
+     * @param int $role
      */
-    public function __construct($username, $password, $email, $role)
+    public function __construct($username, $password, $email, int $role = CreateAccount::USER_ROLE_DEFAULT)
     {
         $this->username = $username;
         $this->password = $password;

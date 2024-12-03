@@ -15,9 +15,8 @@ use twig\{TwigEngine, TwigStreamLoader};
 class App
 {
     const APP_NAME = 'Task App';
+    const PORT = 80;
 
-
-    private $port = 80;
 
     /**
      * @var TaskRepository
@@ -49,14 +48,14 @@ class App
 
     private function startServer()
     {
-        $this->server = new HttpServer($this->port);
+        $this->server = new HttpServer(self::PORT);
         $this->server->setErrorHandler([$this, "errorHandler"]);
         $this->server->setRequestLogHandler([$this, "requestLogHandler"]);
 
         $this->routeRegister();
 
         Logger::info("Server started");
-        Logger::info("Open in browser http://localhost" . (($this->port == 80) ? "" : ":" . $this->port));
+        Logger::info("Open in browser http://localhost" . ((self::PORT == 80) ? "" : ":" . self::PORT));
         Logger::info("Press Ctrl+C to stop server");
 
         $this->server->runInBackground();
@@ -91,12 +90,12 @@ class App
         $this->routes->register(new GetAllAccount($this->accountRepository)); // todo test it
         $this->routes->register(new UpdateAccount($this->accountRepository)); // todo test it*/
 
+        $loader = new TwigStreamLoader();
+        $twig = new TwigEngine($loader);
+        $loader->setPrefix('res://view/');
+        $loader->setSuffix('.twig');
 
-        $this->server->get('/', function (HttpServerRequest $request, HttpServerResponse $response) {
-            $loader = new TwigStreamLoader();
-            $twig = new TwigEngine($loader);
-            $loader->setPrefix('res://view/');
-            $loader->setSuffix('.twig');
+        $this->server->get('/', function (HttpServerRequest $request, HttpServerResponse $response) use ($twig) {
             $response->body($twig->render('index', [
                 'appName' => self::APP_NAME
             ]));
@@ -121,11 +120,11 @@ class App
 
     private function errorHandler(Throwable $err, HttpServerRequest $request, HttpServerResponse $response)
     {
-        $msg = $err->getMessage();
+        Logger::error(sprintf("'%s'; User: %s", $err->getMessage(), $request->remoteUser()));
 
-        Logger::error(sprintf("'%s'; User: %s", $msg, $request->remoteUser()));
-
-        $response->write(json_encode(['error' => $msg]));
+        $response
+            ->status(500)
+            ->write(json_encode(['error' => $err->getMessage()]));
     }
 
     private function requestLogHandler(HttpServerRequest $request)

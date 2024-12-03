@@ -1,0 +1,22 @@
+<dialog id="signup">
+    <article>
+        <header>
+            <button aria-label="Close" rel="prev" onclick="closeModal(document.getElementById('signup'))"></button>
+            <h3>Авторизация</h3>
+        </header>
+        <p>
+            <label for="signup-login">Имя пользователя</label>
+            <input type="text" id="signup-login">
+
+            <label for="signup-password">Пароль</label>
+            <input type="password" id="signup-password">
+
+            <label for="signup-password-repeat">Пароль еще раз</label>
+            <input type="password" id="signup-password-repeat">
+        </p>
+        <footer>
+            <button class="secondary" onclick="closeModal(document.getElementById('signup'))">Отмена</button>
+            <button onclick="signup()">Войти</button>
+        </footer>
+    </article>
+</dialog>

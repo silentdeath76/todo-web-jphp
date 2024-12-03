@@ -1,0 +1,19 @@
+<dialog id="signin">
+    <article>
+        <header>
+            <button aria-label="Close" rel="prev" onclick="closeModal(document.getElementById('signin'))"></button>
+            <h3>Авторизация</h3>
+        </header>
+        <p>
+            <label for="signin-login">Имя пользователя</label>
+            <input type="text" id="signin-login">
+
+            <label for="signin-password">Пароль</label>
+            <input type="password" id="signin-password">
+        </p>
+        <footer>
+            <button class="secondary" onclick="closeModal(document.getElementById('signin'))">Отмена</button>
+            <button onclick="signin()">Войти</button>
+        </footer>
+    </article>
+</dialog>

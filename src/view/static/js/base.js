@@ -1,186 +1,160 @@
-let cardId = -1;
 
-document.addEventListener('DOMContentLoaded', () => {
-    makeCardList()
+class AjaxRequest {
+    constructor(url, method, data) {
+        this.url = url;
+        this.method = method;
+        this.data = data;
+    }
 
-    document.getElementById('rollback').addEventListener("click", function () {
-        document.getElementById('container').innerHTML = null;
-        makeCardList()
-
-        document.getElementById('rollback').style.visibility = 'hidden';
-        document.getElementById('makeTask').style.display = 'none';
-    });
-});
-
-
-function makeAjaxRequest(url, method, data, callback) {
-    const xhr = new XMLHttpRequest();
-    xhr.open(method, url, true);
-    xhr.setRequestHeader('Content-Type', 'application/json');
-    xhr.onload = function () {
-        if (xhr.status === 200) {
-            callback(JSON.parse(xhr.responseText));
-        } else {
-            console.error('Error:', xhr.statusText);
-        }
-    };
-    xhr.onerror = function () {
-        console.error('Error:', xhr.statusText);
-    };
-    xhr.send(JSON.stringify(data));
-}
-
-function makeRow(id, title, done, cardId) {
-    const row = document.createElement('div');
-    row.className = 'row';
-
-    const checkbox = document.createElement('input');
-    checkbox.addEventListener('change', () => {
-        if (checkbox.checked) {
-            label.classList.add('checked');
-        } else {
-            label.classList.remove('checked');
-        }
-
-        makeAjaxRequest('/tasks/' + id, 'PUT',
-            JSON.stringify({
-                "title": title,
-                "done": checkbox.checked,
-                "cardId": cardId
-            }), function (status) {
-                if (status.status !== "ok") {
-                    console.error("error update element")
-                }
+    send(callback) {
+        const xhr = new XMLHttpRequest();
+        xhr.open(this.method, this.url, true);
+        xhr.setRequestHeader('Content-Type', 'application/json');
+        xhr.onload = function () {
+            if (xhr.status === 200) {
+                callback(JSON.parse(xhr.responseText));
+            } else {
+                console.error('Error:', xhr.statusText);
             }
-        );
-    })
-
-    checkbox.type = 'checkbox';
-    checkbox.name = id;
-    checkbox.id = id;
-    checkbox.checked = done;
-
-    const label = document.createElement('label');
-    label.className = 'title';
-    label.htmlFor = id;
-    label.id = 'label-' + id;
-    label.style.userSelect = 'none';
-    label.textContent = title;
-
-    if (done === true) {
-        label.className = 'checked';
+        };
+        xhr.onerror = function () {
+            console.error('Error:', xhr.statusText);
+        };
+        xhr.send(JSON.stringify(this.data));
     }
-
-    row.appendChild(checkbox);
-    row.appendChild(label);
-
-
-    return row;
 }
 
-function makeCard(cardData) {
-    // Создаем контейнер для карточки
-    const card = document.createElement('div');
-    card.classList.add('card');
-    card.classList.add('outline');
-    card.classList.add('contrast');
-
-    // Создаем заголовок карточки
-    const title = document.createElement('div');
-    title.classList.add('title');
-    title.textContent = cardData.title;
-
-    // Создаем детали карточки
-    const details = document.createElement('div');
-    details.classList.add('details');
-    details.textContent = cardData.details;
-
-    // Добавляем заголовок и детали в карточку
-    card.appendChild(title);
-    card.appendChild(details);
-
-    card.addEventListener("click", function () {
-        cardId = cardData.id
-        makeRowList(cardData.id);
-
-        document.getElementById('makeTask').style.display = 'block';
-        document.getElementById('makeCard').style.display = 'none';
-    })
-
-    return card
-}
-
-function makeCardList() {
-    makeAjaxRequest('/cards', 'GET', null, (response) => {
-        let container = document.getElementById('container');
-
-        container.innerHTML = "";
-
-        for (let card in response) {
-            const cardObject = response[card];
-            const cardElement = makeCard(cardObject);
-            container.appendChild(cardElement)
-        }
-        document.getElementById('makeTask').style.display = 'none';
-        document.getElementById('makeCard').style.display = 'block';
-
-    })
-}
-
-function makeRowList(id) {
-    makeAjaxRequest('/tasks/card/' + id, "GET", null, function (response) {
-        document.getElementById('container').innerHTML = null;
-        document.getElementById('rollback').style.visibility = 'visible';
-
-
-        for (var row in response) {
-            const todo = response[row];
-            const rowElement = makeRow(todo.id, todo.title, todo.done, todo.cardId);
-            document.getElementById('container').appendChild(rowElement);
-        }
-    })
-}
-
-function createCard() {
-    let root = document.getElementById("card-create"),
-        title = root.getElementsByTagName("input").item(0).value,
-        details = root.getElementsByTagName("textarea").item(0).value;
-
-    console.log(title, details)
-    makeAjaxRequest("/cards", "POST", JSON.stringify({
-        "title": title,
-        "details": details
-    }), function (params) {
-        document.getElementById('container').appendChild(makeCard(params))
-        closeModal(root)
-    })
-}
-
-function createTask() {
-    let task = document.getElementById("task-create").getElementsByTagName("input").item(0).value
-
-    makeAjaxRequest("/tasks", "POST", JSON.stringify({
-        "id": cardId,
-        "title": task
-    }), function (params) {
-        console.log(params)
-        document.getElementById('container').appendChild(makeRow(params.id, params.title, params.done, params.cardId))
-        closeModal(document.getElementById("task-create"))
-    })
-}
-
-// import * as view_static_js_modal from "view/static/js/modal";
-
-
-class API {
-    cardId = -1;
-
-
+class CardManager {
     constructor() {
+        this.cardId = -1;
+        this.container = document.getElementById('container');
+        this.rollbackButton = document.getElementById('rollback');
+        this.makeTaskButton = document.getElementById('makeTask');
+        this.makeCardButton = document.getElementById('makeCard');
 
+        this.rollbackButton.addEventListener("click", () => this.rollback());
+        this.makeTaskButton.style.display = 'none';
     }
 
-    make () {
-        
+    async loadCards() {
+        try {
+            const response = await fetch('/cards');
+            const cards = await response.json();
+            this.renderCardList(cards);
+        } catch (error) {
+            console.error('Error loading cards:', error);
+        }
+    }
+
+    renderCardList(cards) {
+        this.container.innerHTML = '';
+        for (let card of cards) {
+            const cardElement = this.makeCard(card);
+            this.container.appendChild(cardElement);
+        }
+        this.makeTaskButton.style.display = 'none';
+        this.makeCardButton.style.display = 'block';
+    }
+
+    makeCard(card) {
+        const cardElement = document.createElement('div');
+        cardElement.classList.add('card');
+
+        cardElement.innerHTML = `
+            <h2>${card.title}</h2>
+            <p>${card.details}</p>
+        `;
+
+        cardElement.addEventListener('click', () => {
+            this.cardId = card.id;
+            this.makeRowList(card.id);
+            this.makeTaskButton.style.display = 'block';
+            this.makeCardButton.style.display = 'none';
+        });
+
+        return cardElement;
+    }
+
+    async makeRowList(id) {
+        try {
+            const response = await fetch(`/tasks/card/${id}`);
+            const tasks = await response.json();
+            this.container.innerHTML = '';
+            this.rollbackButton.style.visibility = 'visible';
+
+            for (let task of tasks) {
+                const rowElement = this.makeRow(task);
+                this.container.appendChild(rowElement);
+            }
+        } catch (error) {
+            console.error('Error loading tasks:', error);
+        }
+    }
+
+    makeRow(todo) {
+        const rowElement = document.createElement('div');
+        rowElement.classList.add('task');
+
+        rowElement.innerHTML = `
+        <label>
+            <input type="checkbox" ${todo.done ? 'checked' : ''}>
+            ${todo.title}
+        </label>
+    `;
+        rowElement.addEventListener('click', function (event) {
+            if (event.target.tagName === 'INPUT') {
+                new AjaxRequest('/tasks/' + todo.id, "PUT", {
+                    "title": todo.title,
+                    "done": event.target.checked,
+                    "cardId": todo.cardId
+                }).send(function (params) {
+                    if (params.status !== "ok") {
+                        console.error(params);
+                    }
+                });
+            }
+        });
+
+        return rowElement;
+    }
+
+    rollback() {
+        this.container.innerHTML = '';
+        this.rollbackButton.style.visibility = 'hidden';
+        this.makeTaskButton.style.display = 'none';
+        this.makeCardButton.style.display = 'block';
+        this.loadCards();
+    }
+
+    createCard() {
+        const title = document.getElementById("card-create").getElementsByTagName("input").item(0).value;
+        const details = document.getElementById("card-create").getElementsByTagName("textarea").item(0).value;
+
+        new AjaxRequest("/cards", "POST", JSON.stringify({
+            "title": title,
+            "details": details
+        })).send((params) => {
+            this.container.appendChild(this.makeCard(params));
+            this.closeModal(document.getElementById("card-create"));
+        });
+    }
+
+    createTask() {
+        const task = document.getElementById("task-create").getElementsByTagName("input").item(0).value;
+
+        new AjaxRequest("/tasks", "POST", JSON.stringify({
+            "id": this.cardId,
+            "title": task
+        })).send((params) => {
+            this.container.appendChild(this.makeRow(params));
+            this.closeModal(document.getElementById("task-create"));
+        });
+    }
+
+    closeModal(root) {
+        root.style.display = 'none';
     }
 }
+
+const cardManager = new CardManager();
+cardManager.loadCards();

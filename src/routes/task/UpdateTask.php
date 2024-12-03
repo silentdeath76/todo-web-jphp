@@ -28,7 +28,7 @@ class UpdateTask extends AbstractRoute
 
         if ($request->queryParameters()["title"] == null) {
             $body = $request->bodyStream()->readAll();
-            $json = json_decode(json_decode($body));
+            $json = json_decode($body);
             $title = $json->title;
             $done = $json->done;
             $cardId = $json->cardId;

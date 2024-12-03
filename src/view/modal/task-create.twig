@@ -1,0 +1,17 @@
+<dialog id="task-create">
+    <article>
+        <header>
+            <button aria-label="Close" rel="prev" onclick="closeModal(document.getElementById('task-create'))"></button>
+            <h3>Создание задачи</h3>
+        </header>
+        <p>
+            <input type="text" id="title">
+        </p>
+        <footer>
+            <button class="secondary" onclick="closeModal(document.getElementById('task-create'))">
+                Cancel
+            </button>
+            <button onclick="cardManager.createTask()">Confirm</button>
+        </footer>
+    </article>
+</dialog>
