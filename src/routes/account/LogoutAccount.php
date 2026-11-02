@@ -20,10 +20,24 @@ class LogoutAccount extends AbstractRoute
     {
         $cookies = $request->cookies();
         $cookie = $cookies[Auth::COOKIE] ?? null;
-        $token = is_array($cookie) ? ($cookie["value"] ?? null) : (is_object($cookie) ? ($cookie->value ?? null) : $cookie);
 
-        if ($token) $this->auth->logout($token);
-        $response->cookie(Auth::COOKIE, "", ["path" => "/", "maxAge" => 0]);
+        $token = null;
+        if (is_array($cookie)) {
+            $token = $cookie["value"] ?? null;
+        } else if (is_object($cookie)) {
+            $token = $cookie->value ?? null;
+        } else if (is_string($cookie)) {
+            $token = $cookie;
+        }
+
+        if ($token) {
+            $this->auth->logout($token);
+        }
+
+        // Set-Cookie через header, а не $response->cookie()
+        $response->header("Set-Cookie",
+            Auth::COOKIE . "=; Path=/; HttpOnly; Max-Age=0; SameSite=Lax");
+        $response->header("Content-Type", "application/json");
         $response->body(json_encode(["status" => "ok"]));
     }
 }

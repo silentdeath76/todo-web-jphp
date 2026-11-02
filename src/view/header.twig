@@ -1,28 +1,16 @@
 <nav class="header">
     <ul>
         <li><strong>{{ appName }}</strong></li>
-
         <li><a href="#" class="contrast">Home</a></li>
         <li><a href="#" class="contrast">All ToDos</a></li>
     </ul>
 
     <ul>
-        <li>
-            {# <details class="dropdown outline">
-                <summary>...</summary>
-                <ul>
-                    <li><a href="#">Rename</a></li>
-                    <li class="danger"><a href="#">Delete</a></li>
-                </ul>
-            </details> #}
-        </li>
-        <li>
-            {% if user %}
-        <li><span>{{ user.username }}</span></li>
-        <li>
-            <button class="contrast" onclick="logout()">Выйти</button>
-        </li>
-
+        {% if isLoggedIn %}
+            <li><span>{{ username }}</span></li>
+            <li>
+                <button class="contrast" onclick="logout()">Выйти</button>
+            </li>
         {% else %}
             <li>
                 <button class="contrast" onclick="openModal(document.getElementById('signin'))">Войти</button>
@@ -31,9 +19,5 @@
                 <button class="contrast" onclick="openModal(document.getElementById('signup'))">Регистрация</button>
             </li>
         {% endif %}
-
     </ul>
-
 </nav>
-
-<!-- https://picocss.com/docs/nav -->

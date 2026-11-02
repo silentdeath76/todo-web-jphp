@@ -109,9 +109,16 @@ class App
         $loader->setPrefix('res://view/');
         $loader->setSuffix('.twig');
 
-        $this->server->get('/', function (HttpServerRequest $request, HttpServerResponse $response) use ($twig) {
+        $auth = $this->auth;
+
+        $this->server->get('/', function (HttpServerRequest $request, HttpServerResponse $response) use ($twig, $auth) {
+            $user = $auth->user($request);
+
+
             $response->body($twig->render('index', [
-                'appName' => self::APP_NAME
+                'appName'     => self::APP_NAME,
+                'isLoggedIn'  => $user !== null,
+                'username'    => $user ? $user->username : '',
             ]));
         });
 
