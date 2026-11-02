@@ -1,15 +1,18 @@
 <div class="controls">
+    {% if isLoggedIn %}
     <nav>
         <ul>
             <li>
-                <button id="rollback" class="contrast small" style="visibility: hidden;">назад</button>
+                <button id="rollback" class="contrast outline small" style="visibility: hidden;">← Назад</button>
             </li>
         </ul>
         <ul>
             <li>
-                <button id="makeCard" class="contrast small" onclick="openModal(document.getElementById('card-create'))">Создать карточку</button>
-                <button id="makeTask" class="contrast small" onclick="openModal(document.getElementById('task-create'))">Создать задачу</button>
+
+                <button id="makeCard" class="contrast small" onclick="openModal(document.getElementById('card-create'))">+ Карточка</button>
+                <button id="makeTask" class="small" onclick="openModal(document.getElementById('task-create'))">+ Задача</button>
             </li>
         </ul>
     </nav>
+    {% endif %}
 </div>

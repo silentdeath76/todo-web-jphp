@@ -1,10 +1,18 @@
 <!DOCTYPE html>
-<html lang="en" xmlns="http://www.w3.org/1999/html" data-theme="dark">
+<html lang="en" xmlns="http://www.w3.org/1999/html" data-theme="">
 <head>
     <meta charset="UTF-8">
     <title>Home</title>
     <link rel="stylesheet" href="static/css/pico.min.css">
     <link rel="stylesheet" href="static/css/base.css">
+
+    <script>
+        (function () {
+            const saved = localStorage.getItem('theme');
+            const theme = saved || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+            document.documentElement.setAttribute('data-theme', theme);
+        })();
+    </script>
 </head>
 <body>
 
@@ -14,7 +22,11 @@
     {% include 'controls' %}
 
     <div id="container" class="container">
-        <span aria-busy="true" style="text-align: center; display: block;">Loading...</span>
+        {% if isLoggedIn %}
+            <span aria-busy="true" style="text-align: center; display: block;">Loading...</span>
+        {% else %}
+            <span aria-busy="false" style="text-align: center; display: block ruby;">Войдите в аккаунт чтобы продолжить</span>
+        {% endif %}
     </div>
 
     {% include 'modal/card-create' %}

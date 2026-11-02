@@ -1,70 +1,299 @@
-body {
-    font-family: 'Open Sans', sans-serif;
+/* ============ База ============ */
+:root {
+    --app-radius: 14px;
+    --app-radius-sm: 10px;
+    --app-gap: 16px;
+    --app-transition: 180ms ease;
+    --app-accent: var(--pico-primary, #01aaff);
 }
 
+/* Тёмная тема (по умолчанию) */
+:root,
+[data-theme="dark"] {
+    --app-card-bg: #181c25;
+    --app-border: rgba(124, 124, 124, 0.18);
+    --app-shadow: 0 4px 24px rgba(0, 0, 0, 0.35);
+    --app-shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.25);
+    --app-header-bg: rgba(19, 23, 31, 0.85);
+    --app-scrollbar: rgba(124, 124, 124, 0.3);
+}
+
+/* Светлая тема */
+[data-theme="light"] {
+    --app-card-bg: #ffffff;
+    --app-border: rgba(100, 116, 139, 0.15);
+    --app-shadow: 0 8px 28px rgba(15, 23, 42, 0.08);
+    --app-shadow-sm: 0 2px 8px rgba(15, 23, 42, 0.06);
+    --app-header-bg: rgba(255, 255, 255, 0.85);
+    --app-scrollbar: rgba(100, 116, 139, 0.25);
+}
+
+* { box-sizing: border-box; }
+
+body {
+    font-family: 'Inter', 'Open Sans', system-ui, sans-serif;
+    background: var(--pico-background-color);
+    color: var(--pico-color);
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+}
+
+/* ============ Шапка ============ */
+.header {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    width: 100%;
+    padding: 0 24px;
+    background: var(--app-header-bg);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--app-border);
+}
+
+.header ul { margin: 0; }
 .header strong {
     user-select: none;
+    letter-spacing: -0.02em;
+    font-size: 1.05rem;
 }
 
+.header .user-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 4px 12px 4px 4px;
+    border-radius: 999px;
+    background: var(--app-border);
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+.header .user-chip .avatar {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--app-accent);
+    color: #fff;
+    font-weight: 700;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+}
+
+/* ============ Контейнер ============ */
 .container {
     max-width: 1200px;
     margin: 0 auto;
-    padding: 80px 20px;
-    border-radius: 10px;
+    padding: 24px 20px 80px;
 }
 
-.header {
-    position: fixed;
-    width: 100%;
-    padding: 0 20px;
-    text-align: center;
-    border-bottom: 1px solid rgba(124, 124, 124, 0.1);
-    background: var(--pico-background-color);
-}
-
+/* ============ Панель управления ============ */
 .controls {
-    margin-top: 10px;
-    border-bottom: 1px solid rgba(124, 124, 124, 0.1);
+    margin-top: 8px;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--app-border);
 }
 
-#container > .card {
-    display: inline-block;
+.controls nav ul { margin: 0; gap: 8px; }
+.controls button { border-radius: 999px; }
+
+/* ============ Сетка карточек ============ */
+#container {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: var(--app-gap);
+    margin-top: 24px;
+}
+
+/* ============ Карточка ============ */
+.card {
+    position: relative;
+    display: flex;
+    flex-direction: column;
     cursor: pointer;
-    width: 220px;
-    height: 220px;
-    padding: 5px 10px;
-    border: 1px solid rgba(124, 124, 124, 0.1);
-    margin: 10px 2px;
+    padding: 18px 18px 16px;
+    border-radius: var(--app-radius);
+    background: var(--app-card-bg);
+    border: 1px solid var(--app-border);
+    box-shadow: var(--app-shadow-sm);
+    transition: transform var(--app-transition), box-shadow var(--app-transition), border-color var(--app-transition);
+    min-height: 180px;
+    overflow: hidden;
 }
 
-.card .title {
-    font-weight: bold;
-    font-size: 0.9em;
+.card::before {
+    content: "";
+    position: absolute;
+    inset: 0 auto 0 0;
+    width: 4px;
+    background: var(--app-accent);
+    opacity: 0;
+    transition: opacity var(--app-transition);
+}
+
+.card:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--app-shadow);
+    border-color: color-mix(in srgb, var(--app-accent) 50%, transparent);
+}
+
+.card:hover::before { opacity: 1; }
+
+.card h2 {
+    font-size: 1.05rem;
+    font-weight: 600;
+    margin: 0 0 8px;
+    line-height: 1.3;
+    letter-spacing: -0.01em;
+    color: var(--pico-color);
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.card p {
+    font-size: 0.88rem;
+    line-height: 1.5;
+    color: var(--pico-muted-color);
+    margin: 0;
+    display: -webkit-box;
+    -webkit-line-clamp: 4;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+/* ============ Задачи ============ */
+#container > .task {
+    grid-column: 1 / -1;
+    display: flex;
+    align-items: center;
+    padding: 12px 16px;
+    border-radius: var(--app-radius-sm);
+    background: var(--app-card-bg);
+    border: 1px solid var(--app-border);
+    transition: background var(--app-transition), border-color var(--app-transition);
+}
+
+#container > .task:hover {
+    border-color: color-mix(in srgb, var(--app-accent) 40%, transparent);
+}
+
+.task label {
+    display: flex;
+    align-items: center;
+    gap: 12px;
     width: 100%;
-    color: var(--pico-contrast);
-    border-bottom: 1px solid #636363;
+    margin: 0;
+    cursor: pointer;
+    font-size: 0.95rem;
 }
 
-.card .details {
-    font-size: 0.8em;
-    color: var(--pico-code-color);
+.task input[type="checkbox"] {
+    margin: 0;
+    width: 20px;
+    height: 20px;
+    flex-shrink: 0;
 }
 
-.danger {
-    background-color: #964a50 !important;
+.task input[type="checkbox"]:checked + span,
+.task input[type="checkbox"]:checked ~ * {
+    text-decoration: line-through;
+    opacity: 0.6;
 }
 
-.danger:hover {
-    background-color: #913e44 !important;
+/* ============ Модалки ============ */
+dialog article {
+    background: var(--pico-background-color);
+    border: 1px solid var(--app-border);
+    box-shadow: var(--app-shadow);
 }
 
-.dropdown summary {
-    rotate: 90deg;
-    display: contents;
+@keyframes modal-pop {
+    from { opacity: 0; transform: translateY(8px) scale(0.97); }
+    to   { opacity: 1; transform: translateY(0) scale(1); }
 }
 
+dialog article header h3 {
+    font-size: 1.15rem;
+    letter-spacing: -0.01em;
+    margin: 0;
+}
 
+dialog article input,
+dialog article textarea {
+    border-radius: var(--app-radius-sm);
+}
 
-.dropdown summary::after {
-    visibility: hidden;
+dialog article footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+}
+
+dialog article footer button {
+    border-radius: 999px;
+    margin: 0 !important;
+}
+
+/* ============ Кнопки ============ */
+button,
+[role="button"] {
+    border-radius: 999px;
+    font-weight: 500;
+    transition: transform var(--app-transition), background var(--app-transition), border-color var(--app-transition);
+}
+
+button:active,
+[role="button"]:active {
+    transform: scale(0.97);
+}
+
+/* ============ Скроллбар ============ */
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb {
+    background: var(--app-scrollbar);
+    border-radius: 999px;
+}
+::-webkit-scrollbar-thumb:hover { background: var(--pico-muted-color); }
+
+/* ============ Адаптив ============ */
+@media (max-width: 640px) {
+    .header { padding: 0 12px; }
+    .container { padding: 16px 12px 60px; }
+    #container { grid-template-columns: 1fr; }
+    .card { min-height: 140px; }
+    .controls nav { flex-wrap: wrap; }
+}
+
+/* ============ Переключатель темы ============ */
+.theme-toggle {
+    width: 40px;
+    height: 40px;
+    padding: 0 !important;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    font-size: 1.1rem;
+    line-height: 1;
+}
+
+/* В тёмной теме показываем солнце (переключить на светлую), в светлой — луну */
+[data-theme="dark"] .theme-icon-light { display: none; }
+[data-theme="dark"] .theme-icon-dark  { display: inline; }
+
+[data-theme="light"] .theme-icon-dark  { display: none; }
+[data-theme="light"] .theme-icon-light { display: inline; }
+
+/* Плавный переход при переключении */
+html {
+    transition: background-color 200ms ease, color 200ms ease;
+}
+body, .card, .task, dialog article, .header {
+    transition: background-color 200ms ease, border-color 200ms ease, color 200ms ease;
 }

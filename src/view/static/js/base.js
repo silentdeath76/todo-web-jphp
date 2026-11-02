@@ -132,37 +132,22 @@ class CardManager {
     }
 
     createCard() {
-        const title = document.getElementById("card-create").getElementsByTagName("input").item(0).value;
-        const details = document.getElementById("card-create").getElementsByTagName("textarea").item(0).value;
-
-        new AjaxRequest("/cards", "POST", {
-            "title": title,
-            "details": details
-        }).send((params) => {
-            this.container.appendChild(this.makeCard(params));
-            this.closeModal(document.getElementById("card-create"));
+        const title   = document.getElementById('card-title').value.trim();
+        const details = document.getElementById('card-details').value.trim();
+        if (!title) { alert('Введите заголовок'); return; }
+        new AjaxRequest('/cards', 'POST', {title, details}).send((card) => {
+            this.container.appendChild(this.makeCard(card));
+            this.closeModal(document.getElementById('card-create'));
         });
     }
 
     createTask() {
-        const task = document.getElementById("task-create").getElementsByTagName("input").item(0).value;
-
-        if (!this.cardId || this.cardId === -1) {
-            alert('Сначала откройте карточку');
-            return;
-        }
-        if (!task) {
-            alert('Введите название задачи');
-            return;
-        }
-
-        new AjaxRequest("/tasks", "POST", {
-            "title": task,
-            "done": false,
-            "cardId": this.cardId       // ← cardId, не id
-        }).send((params) => {
-            this.container.appendChild(this.makeRow(params));
-            this.closeModal(document.getElementById("task-create"));
+        if (!this.cardId || this.cardId === -1) { alert('Сначала откройте карточку'); return; }
+        const title = document.getElementById('task-title').value.trim();
+        if (!title) { alert('Введите название задачи'); return; }
+        new AjaxRequest('/tasks', 'POST', {title, done: false, cardId: this.cardId}).send((task) => {
+            this.container.appendChild(this.makeRow(task));
+            this.closeModal(document.getElementById('task-create'));
         });
     }
 
@@ -236,6 +221,22 @@ async function me() {
     const r = await fetch('/account/me');
     return r.ok ? (await r.json()).user : null;
 }
+
+function applyTheme(theme) {
+    document.documentElement.setAttribute('data-theme', theme);
+    localStorage.setItem('theme', theme);
+}
+
+function toggleTheme() {
+    const current = document.documentElement.getAttribute('data-theme') || 'dark';
+    applyTheme(current === 'dark' ? 'light' : 'dark');
+}
+
+window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
+    if (!localStorage.getItem('theme')) {
+        document.documentElement.setAttribute('data-theme', e.matches ? 'dark' : 'light');
+    }
+});
 
 const cardManager = new CardManager();
 cardManager.loadCards();

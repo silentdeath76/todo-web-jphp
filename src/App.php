@@ -116,9 +116,10 @@ class App
 
 
             $response->body($twig->render('index', [
-                'appName'     => self::APP_NAME,
-                'isLoggedIn'  => $user !== null,
-                'username'    => $user ? $user->username : '',
+                'appName'    => self::APP_NAME,
+                'isLoggedIn' => $user !== null,
+                'username'   => $user ? $user->username : '',
+                'initial'    => $user ? strtoupper(substr($user->username, 0, 1)) : '',
             ]));
         });
 
