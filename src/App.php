@@ -124,7 +124,7 @@ class App
         });
 
         foreach ($this->routes->getAllRoutes() as $route) {
-            Logger::info("Registering: " . $route->getMethod() . " " . $route->getPath() . " (" . get_class($route) . ")");
+            // Logger::info("Registering: " . $route->getMethod() . " " . $route->getPath() . " (" . get_class($route) . ")");
 
             $method = strtoupper($route->getMethod());
             $path   = $route->getPath();

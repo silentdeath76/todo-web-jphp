@@ -81,12 +81,32 @@ class CardManager {
         const cardElement = document.createElement('div');
         cardElement.classList.add('card');
 
-        cardElement.innerHTML = `
-            <h2>${card.title}</h2>
-            <p>${card.details}</p>
-        `;
+        // Цвет иконки — детерминированный по id/названию
+        const colors = ['#f97316', '#e11d48', '#22c55e', '#3b82f6', '#8b5cf6', '#ec4899', '#06b6d4', '#eab308'];
+        const colorIdx = (typeof card.id === 'number' ? card.id : card.title.length) % colors.length;
+        const color = colors[colorIdx];
+        const initial = (card.title || '?').trim().charAt(0).toUpperCase();
 
-        cardElement.addEventListener('click', () => {
+        cardElement.innerHTML = `
+        <div class="card-header">
+            <div class="card-icon" style="background:${color}">${initial}</div>
+            <div class="card-title-block">
+                <h3 class="card-title">${escapeHtml(card.title)}</h3>
+                <span class="card-category">Карточка</span>
+            </div>
+        </div>
+        <p class="card-details">${escapeHtml(card.details || '')}</p>
+        <div class="card-footer">
+            <span class="card-category">ID: ${card.id}</span>
+            <button class="open-btn" type="button">
+                Открыть
+                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+            </button>
+        </div>
+    `;
+
+        cardElement.addEventListener('click', (e) => {
+            // Клик по «Открыть» и по карточке — одно и то же
             this.cardId = card.id;
             this.makeRowList(card.id);
             this.makeTaskButton.style.display = 'block';
@@ -135,6 +155,7 @@ class CardManager {
         const title   = document.getElementById('card-title').value.trim();
         const details = document.getElementById('card-details').value.trim();
         if (!title) { alert('Введите заголовок'); return; }
+
         new AjaxRequest('/cards', 'POST', {title, details}).send((card) => {
             this.container.appendChild(this.makeCard(card));
             this.closeModal(document.getElementById('card-create'));
@@ -145,6 +166,7 @@ class CardManager {
         if (!this.cardId || this.cardId === -1) { alert('Сначала откройте карточку'); return; }
         const title = document.getElementById('task-title').value.trim();
         if (!title) { alert('Введите название задачи'); return; }
+
         new AjaxRequest('/tasks', 'POST', {title, done: false, cardId: this.cardId}).send((task) => {
             this.container.appendChild(this.makeRow(task));
             this.closeModal(document.getElementById('task-create'));
@@ -222,6 +244,16 @@ async function me() {
     return r.ok ? (await r.json()).user : null;
 }
 
+function escapeHtml(str) {
+    return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+}
+
+/* ============ Тема ============ */
 function applyTheme(theme) {
     document.documentElement.setAttribute('data-theme', theme);
     localStorage.setItem('theme', theme);
@@ -236,6 +268,14 @@ window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e)
     if (!localStorage.getItem('theme')) {
         document.documentElement.setAttribute('data-theme', e.matches ? 'dark' : 'light');
     }
+});
+
+document.addEventListener('mousemove', (e) => {
+    const card = e.target.closest('.card');
+    if (!card) return;
+    const rect = card.getBoundingClientRect();
+    card.style.setProperty('--mouse-x', `${e.clientX - rect.left}px`);
+    card.style.setProperty('--mouse-y', `${e.clientY - rect.top}px`);
 });
 
 const cardManager = new CardManager();

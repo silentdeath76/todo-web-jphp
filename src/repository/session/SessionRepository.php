@@ -46,11 +46,11 @@ class SessionRepository extends SqliteRepository
                 "SELECT userId FROM {$this->table} WHERE token = ? AND expires_at > ?",
                 [$token, time()]
             )->fetch();
-            Logger::info(__METHOD__);
-            var_dump($row->toArray());
+            // Logger::info(__METHOD__);
+            // var_dump($row->toArray());
             return $row ? (int)$row->toArray()["userId"] : null;
         } catch (SqlException $e) {
-            \core\logger\Logger::error("Session find: " . $e->getMessage());
+            Logger::error("Session find: " . $e->getMessage());
             return null;
         }
     }
