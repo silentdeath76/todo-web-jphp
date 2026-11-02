@@ -6,32 +6,39 @@ use entities\card\CardDraftData;
 use php\http\HttpServerRequest;
 use php\http\HttpServerResponse;
 use routes\AbstractRoute;
+use routes\AuthRoute;
 
-class UpdateCard extends AbstractRoute
+class UpdateCard extends AuthRoute
 {
 
     public function __invoke(HttpServerRequest $request, HttpServerResponse $response)
     {
-        $params = $request->queryParameters();
+        $user = $this->guard($request, $response);
+        if ($user === null) return;
 
-        if ($params["title"] == null && $params["details"] == null) {
-            $body = $request->bodyStream()->readAll();
-            $json = json_decode(json_decode($body));
-            $title = $json->title;
-            $details = $json->details;
-        } else {
-            $title = $params["title"];
-            $details = $params["details"];
+        $body = $request->bodyStream()->readFully();
+        $params = json_decode($body, true);
+        if (!is_array($params)) {
+            $params = $request->queryParameters();
         }
 
+        $title   = $params["title"]   ?? null;
+        $details = $params["details"] ?? null;
 
-        $result = $this->repository->updateCard(
+        if ($title === null && $details === null) {
+            $response->status(400);
+            $response->body(json_encode(["status" => "error", "message" => "Empty payload"]));
+            return;
+        }
+
+        $ok = $this->repository->updateCard(
             (int)$request->attribute("id"),
-            new CardDraftData($title, $details)
+            new \entities\card\CardDraftData((string)$title, (string)$details),
+            $user->id
         );
 
         $response->header("Content-Type", "application/json");
-        $response->body(json_encode(["status" => $result ? "ok" : "error"]));
+        $response->body(json_encode(["status" => $ok ? "ok" : "error"]));
     }
 
     public function getPath(): string

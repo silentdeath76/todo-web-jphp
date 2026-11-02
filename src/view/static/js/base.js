@@ -10,16 +10,20 @@ class AjaxRequest {
         const xhr = new XMLHttpRequest();
         xhr.open(this.method, this.url, true);
         xhr.setRequestHeader('Content-Type', 'application/json');
+        xhr.withCredentials = true;              // ← на всякий случай
         xhr.onload = function () {
-            if (xhr.status === 200) {
-                callback(JSON.parse(xhr.responseText));
+            if (xhr.status >= 200 && xhr.status < 300) {
+                let data = null;
+                try { data = JSON.parse(xhr.responseText); } catch (e) {}
+                callback(data);
             } else {
-                console.error('Error:', xhr.statusText);
+                console.error('Error:', xhr.status, xhr.responseText);
             }
         };
         xhr.onerror = function () {
             console.error('Error:', xhr.statusText);
         };
+        // this.data уже объект — один раз stringify
         xhr.send(JSON.stringify(this.data));
     }
 }
@@ -38,12 +42,29 @@ class CardManager {
 
     async loadCards() {
         try {
-            const response = await fetch('/cards');
+            const response = await fetch('/cards', {credentials: 'same-origin'});
             const cards = await response.json();
             this.renderCardList(cards);
         } catch (error) {
             console.error('Error loading cards:', error);
         }
+    }
+
+    async makeRowList(id) {
+        try {
+            const response = await fetch(`/tasks/card/${id}`);
+            const tasks = await response.json();
+            this.container.innerHTML = '';
+            this.rollbackButton.style.visibility = 'visible';
+
+            for (let task of tasks) {
+                const rowElement = this.makeRow(task);
+                this.container.appendChild(rowElement);
+            }
+        } catch (error) {
+            console.error('Error loading tasks:', error);
+        }
+
     }
 
     renderCardList(cards) {
@@ -73,22 +94,6 @@ class CardManager {
         });
 
         return cardElement;
-    }
-
-    async makeRowList(id) {
-        try {
-            const response = await fetch(`/tasks/card/${id}`);
-            const tasks = await response.json();
-            this.container.innerHTML = '';
-            this.rollbackButton.style.visibility = 'visible';
-
-            for (let task of tasks) {
-                const rowElement = this.makeRow(task);
-                this.container.appendChild(rowElement);
-            }
-        } catch (error) {
-            console.error('Error loading tasks:', error);
-        }
     }
 
     makeRow(todo) {
@@ -130,10 +135,10 @@ class CardManager {
         const title = document.getElementById("card-create").getElementsByTagName("input").item(0).value;
         const details = document.getElementById("card-create").getElementsByTagName("textarea").item(0).value;
 
-        new AjaxRequest("/cards", "POST", JSON.stringify({
+        new AjaxRequest("/cards", "POST", {
             "title": title,
             "details": details
-        })).send((params) => {
+        }).send((params) => {
             this.container.appendChild(this.makeCard(params));
             this.closeModal(document.getElementById("card-create"));
         });
@@ -142,10 +147,20 @@ class CardManager {
     createTask() {
         const task = document.getElementById("task-create").getElementsByTagName("input").item(0).value;
 
-        new AjaxRequest("/tasks", "POST", JSON.stringify({
-            "id": this.cardId,
-            "title": task
-        })).send((params) => {
+        if (!this.cardId || this.cardId === -1) {
+            alert('Сначала откройте карточку');
+            return;
+        }
+        if (!task) {
+            alert('Введите название задачи');
+            return;
+        }
+
+        new AjaxRequest("/tasks", "POST", {
+            "title": task,
+            "done": false,
+            "cardId": this.cardId       // ← cardId, не id
+        }).send((params) => {
             this.container.appendChild(this.makeRow(params));
             this.closeModal(document.getElementById("task-create"));
         });
@@ -154,6 +169,72 @@ class CardManager {
     closeModal(root) {
         root.style.display = 'none';
     }
+}
+
+async function signin() {
+    const username = document.getElementById('signin-login').value;
+    const password = document.getElementById('signin-password').value;
+
+    const r = await fetch('/account/login', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        credentials: 'same-origin',
+        body: JSON.stringify({username, password})
+    });
+    const data = await r.json();
+
+    if (data.status === 'ok') {
+        closeModal(document.getElementById('signin'));
+        location.reload();
+    } else {
+        alert(data.message || 'Ошибка входа');
+    }
+}
+
+async function signup() {
+    const username = document.getElementById('signup-login').value;
+    const password = document.getElementById('signup-password').value;
+    const repeat   = document.getElementById('signup-password-repeat').value;
+
+    if (password !== repeat) { alert('Пароли не совпадают'); return; }
+
+    const r = await fetch('/account/create', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        credentials: 'same-origin',
+        body: JSON.stringify({username, password, email: ''})
+    });
+    const data = await r.json();
+
+    if (data.status !== 'ok') {
+        alert(data.message || 'Ошибка регистрации');
+        return;
+    }
+
+    // авто-логин
+    const r2 = await fetch('/account/login', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        credentials: 'same-origin',
+        body: JSON.stringify({username, password})
+    });
+    const d2 = await r2.json();
+
+    if (d2.status === 'ok') {
+        location.reload();
+    } else {
+        alert(d2.message || 'Ошибка входа');
+    }
+}
+
+async function logout() {
+    await fetch('/account/logout', {method: 'POST', credentials: 'same-origin'});
+    location.reload();
+}
+
+async function me() {
+    const r = await fetch('/account/me');
+    return r.ok ? (await r.json()).user : null;
 }
 
 const cardManager = new CardManager();

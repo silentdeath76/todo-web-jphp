@@ -5,8 +5,9 @@ namespace routes\task;
 use php\http\HttpServerRequest;
 use php\http\HttpServerResponse;
 use routes\AbstractRoute;
+use routes\AuthRoute;
 
-class DeleteTask extends AbstractRoute
+class DeleteTask extends AuthRoute
 {
 
     public function getPath(): string
@@ -21,7 +22,10 @@ class DeleteTask extends AbstractRoute
 
     public function __invoke(HttpServerRequest $request, HttpServerResponse $response)
     {
-        $result = $this->repository->removeTask($request->attribute("id"));
+        $user = $this->guard($request, $response);
+        if ($user === null) return;
+
+        $result = $this->repository->removeTask($request->attribute("id"), $user->id);
         $response->body(json_encode(["status" => $result ? "ok" : "error"]));
     }
 }

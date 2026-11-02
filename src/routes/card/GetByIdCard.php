@@ -6,8 +6,9 @@ use php\http\HttpServerRequest;
 use php\http\HttpServerResponse;
 use repository\task\TaskMemoryRepository;
 use routes\AbstractRoute;
+use routes\AuthRoute;
 
-class GetByIdCard extends AbstractRoute
+class GetByIdCard extends AuthRoute
 {
     public function getPath(): string
     {
@@ -21,21 +22,28 @@ class GetByIdCard extends AbstractRoute
 
     public function __invoke(HttpServerRequest $request, HttpServerResponse $response)
     {
-        $id = $request->attribute('id');
+        $user = $this->guard($request, $response);
+        if ($user === null) return;
 
+        var_dump(__METHOD__);
+        var_dump($request->queryParameters());
+        var_dump($request);
+
+        $id = $request->attribute('id');
         if (!is_numeric($id)) {
-            $response->write('Invalid id');
+            $response->status(400);
+            $response->body(json_encode(["status" => "error", "message" => "Invalid id"]));
             return;
         }
 
-        $todo = $this->repository->getCard($id);
-
-        if ($todo === null) {
-            $response->status(404, 'Not Found');
+        $card = $this->repository->getCard((int)$id, $user->id);
+        if ($card === null) {
+            $response->status(404);
+            $response->body(json_encode(["status" => "error", "message" => "Not Found"]));
             return;
         }
 
         $response->header("Content-Type", "application/json");
-        $response->write(json_encode(TaskMemoryRepository::toArray($todo)));
+        $response->body(json_encode($card->toArray(), JSON_UNESCAPED_UNICODE));
     }
 }

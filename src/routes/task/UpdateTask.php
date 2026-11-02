@@ -7,8 +7,9 @@ use entities\task\TaskDraft;
 use php\http\HttpServerRequest;
 use php\http\HttpServerResponse;
 use routes\AbstractRoute;
+use routes\AuthRoute;
 
-class UpdateTask extends AbstractRoute
+class UpdateTask extends AuthRoute
 {
 
     public function getPath(): string
@@ -24,6 +25,8 @@ class UpdateTask extends AbstractRoute
 
     public function __invoke(HttpServerRequest $request, HttpServerResponse $response)
     {
+        $user = $this->guard($request, $response);
+        if ($user === null) return;
         // var_dump($request->queryParameters()["title"]);
 
         if ($request->queryParameters()["title"] == null) {
@@ -48,7 +51,8 @@ class UpdateTask extends AbstractRoute
 
         $result = $this->repository->updateTask(
             (int)$request->attribute("id"),
-            new TaskDraft($title, $done, $cardId)
+            new TaskDraft($title, $done, $cardId),
+            $user->id
         );
 
         $response->body(json_encode(["status" => $result ? "ok" : "error"]));

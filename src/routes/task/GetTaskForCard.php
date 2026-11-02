@@ -3,34 +3,35 @@
 namespace routes\task;
 
 use core\logger\Logger;
-use php\http\{HttpServerRequest, HttpServerResponse};
-use repository\task\TaskMemoryRepository;
-use routes\AbstractRoute;
+use php\http\HttpServerRequest;
+use php\http\HttpServerResponse;
+use routes\AuthRoute;
+use repository\AbstractRepository;
 
-class GetTaskForCard extends AbstractRoute
+class GetTaskForCard extends AuthRoute
 {
-    public function getPath(): string
-    {
-        return "/tasks/card/{id}";
-    }
-
-    public function getMethod(): string
-    {
-        return "GET";
-    }
+    public function getPath(): string { return "/tasks/card/{id}"; }
+    public function getMethod(): string { return "GET"; }
 
     public function __invoke(HttpServerRequest $request, HttpServerResponse $response)
     {
-        $response->header("Content-Type", "application/json");
+        $user = $this->guard($request, $response);
+        if ($user === null) return;
 
-        if (!is_numeric($request->attribute("id"))) {
-            Logger::error("Id is not numeric");
-            $response->body(json_encode(["status" => "error"]));
+        $id = $request->attribute("id");
+        if (!is_numeric($id)) {
+            $response->status(400);
+            $response->header("Content-Type", "application/json");
+            $response->body(json_encode(["status" => "error", "message" => "Invalid id"]));
             return;
         }
 
-        $result = $this->repository->getTaskForCard($request->attribute("id"));
+        $result = $this->repository->getTaskForCard((int)$id, $user->id);
 
-        $response->body(json_encode(TaskMemoryRepository::toArray($result)));
+        $response->header("Content-Type", "application/json");
+        $response->body(json_encode(
+            AbstractRepository::toArray($result),
+            JSON_UNESCAPED_UNICODE
+        ));
     }
 }

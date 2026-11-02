@@ -13,6 +13,8 @@ interface AccountRepository
 
     public function update(int $id, AccountDraftData $account): bool;
 
+    public function getById(int $id): ?AccountData;
+
     /**
      * @return AccountData[]
      */

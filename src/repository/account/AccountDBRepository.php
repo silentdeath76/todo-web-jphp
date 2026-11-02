@@ -16,54 +16,89 @@ class AccountDBRepository extends SqliteRepository implements AccountRepository
     {
         try {
             $this->createTable($this->table, [
-                    "id" => "integer primary key autoincrement",
-                    "username" => "text unique",
-                    "password" => "text",
-                    "email" => "text",
-                    "role" => "integer default 0",
-                    "created_at" => "datetime default current_timestamp",
-                    "updated_at" => "datetime default current_timestamp",
-                    "deleted_at" => "datetime default current_timestamp",
-                    "deleted" => "boolean default 0",
-                ]
-            );
+                "id"         => "integer primary key autoincrement",
+                "username"   => "text unique",
+                "password"   => "text",
+                "email"      => "text",
+                "role"       => "integer default 0",
+                "created_at" => "integer",
+                "updated_at" => "integer",
+                "deleted_at" => "integer",
+                "deleted"    => "integer default 0",
+            ]);
 
             if ($this->get("admin") == null) {
-                // todo change password hashing with use a salt
-                $this->create(new AccountDraftData("admin", md5("admin"), "admin@gmail.com", 1));
+                $this->create(new AccountDraftData(
+                    "admin",
+                    \core\auth\PasswordHasher::hash("admin"),
+                    "admin@gmail.com",
+                    1
+                ));
             }
         } catch (SqlException $e) {
-            Logger::error("Error create table $this->table");
+            Logger::error("Error create table {$this->table}: " . $e->getMessage());
         }
     }
 
     public function get($username): ?AccountData
     {
         try {
-            if (($fetch = $this->query("SELECT * FROM $this->table WHERE username = ?", [$username])->fetch()) !== null) {
-                $user = $fetch->toArray();
+            $row = $this->query(
+                "SELECT * FROM {$this->table} WHERE username = ? AND deleted = 0",
+                [$username]
+            )->fetch();
 
-                if ($user["deleted"] === 0) {
-                    return new AccountData($user["id"], $user["username"], $user["password"], $user["email"], $user["role"], $user["created_at"], $user["updated_at"]);
-                }
+            if ($row === null) {
+                return null;
             }
 
+            $u = $row->toArray();
+            return new AccountData(
+                (int)$u["id"],
+                $u["username"],
+                $u["password"],
+                $u["email"],
+                (int)$u["role"],
+                (int)$u["created_at"],
+                (int)$u["updated_at"]
+            );
         } catch (SqlException $e) {
-            Logger::error("Error get user $username");
+            Logger::error("Error get user {$username}: " . $e->getMessage());
+            return null;
         }
+    }
 
-        return null;
+    public function getById(int $id): ?AccountData
+    {
+        try {
+            $row = $this->query(
+                "SELECT * FROM {$this->table} WHERE id = ? AND deleted = 0",
+                [$id]
+            )->fetch();
+            if ($row === null) return null;
+            $u = $row->toArray();
+            return new AccountData(
+                (int)$u["id"], $u["username"], $u["password"], $u["email"],
+                (int)$u["role"], (int)$u["created_at"], (int)$u["updated_at"]
+            );
+        } catch (SqlException $e) {
+            Logger::error("getById: " . $e->getMessage());
+            return null;
+        }
     }
 
     public function create(AccountDraftData $account): ?AccountData
     {
         try {
-            $this->query("INSERT INTO $this->table (username, password, email) VALUES (?, ?, ?)",
-                [$account->username, $account->password, $account->email])->update();
+            $now = time();
+            $this->query(
+                "INSERT INTO {$this->table} (username, password, email, role, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?)",
+                [$account->username, $account->password, $account->email, $account->role, $now, $now]
+            )->update();
 
             return $this->get($account->username);
         } catch (SqlException $e) {
-            Logger::error("Error create account");
+            Logger::error("Error create account: " . $e->getMessage());
             return null;
         }
     }
@@ -84,13 +119,16 @@ class AccountDBRepository extends SqliteRepository implements AccountRepository
     {
         try {
             $accounts = [];
-            foreach ($this->query("SELECT * FROM $this->table WHERE deleted = 0") as $user) {
-                $user = $user->toArray();
-                $accounts[] = new AccountData($user["id"], $user["username"], $user["password"], $user["email"], $user["role"], $user["created_at"], $user["updated_at"]);
+            foreach ($this->query("SELECT * FROM {$this->table} WHERE deleted = 0") as $row) {
+                $u = $row->toArray();
+                $accounts[] = new AccountData(
+                    (int)$u["id"], $u["username"], $u["password"], $u["email"],
+                    (int)$u["role"], (int)$u["created_at"], (int)$u["updated_at"]
+                );
             }
             return $accounts;
         } catch (SqlException $e) {
-            Logger::error("Error get all accounts");
+            Logger::error("Error get all accounts: " . $e->getMessage());
             return [];
         }
     }

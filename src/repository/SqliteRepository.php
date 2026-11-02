@@ -11,27 +11,18 @@ use php\sql\SqlException;
 
 abstract class SqliteRepository extends AbstractRepository
 {
-    /**
-     * @var SqliteRepository
-     */
-    private static $instance;
+    /** @var SqlConnection|null */
+    protected static $connection = null;
 
-    /**
-     * @var SqlConnection
-     */
-    protected static $connection;
+    abstract public function makeTable();
 
-    public abstract function makeTable ();
-
-    /**
-     * DBConnection constructor.
-     * @param $file
-     */
     public function __construct($file)
     {
         try {
             SqlDriverManager::install('sqlite');
-            self::$connection = SqlDriverManager::getConnection('sqlite:' . $file, []);
+            if (self::$connection === null) {
+                self::$connection = SqlDriverManager::getConnection('sqlite:' . $file, []);
+            }
             $this->makeTable();
         } catch (SqlException $e) {
             Logger::error("Error create connection: " . $e->getMessage());

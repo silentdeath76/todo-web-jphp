@@ -19,10 +19,10 @@ class CardDBRepository extends SqliteRepository
     {
         try {
             $this->createTable($this->table, [
-                "id" => "integer primary key autoincrement",
-                "title" => "text",
+                "id"      => "integer primary key autoincrement",
+                "title"   => "text",
                 "details" => "text",
-                "userId" => "integer"
+                "userId"  => "integer not null default 0",
             ]);
 
 
@@ -34,70 +34,77 @@ class CardDBRepository extends SqliteRepository
         }
     }
 
-    public function getAllCards(): array
+    public function getAllCards(int $userId): array
     {
         try {
-            $cardList = [];
-
-            foreach ($this->query("SELECT * FROM $this->table") as $item) {
-                $item = $item->toArray();
-                $cardList[] = new CardData($item["id"], $item["title"], $item["details"]);
+            $list = [];
+            foreach ($this->query("SELECT * FROM {$this->table} WHERE userId = ?", [$userId]) as $item) {
+                $i = $item->toArray();
+                $list[] = new CardData($i["id"], $i["title"], $i["details"]);
             }
-
-            return $cardList;
+            return $list;
         } catch (SqlException $e) {
-            Logger::error("getting all cards: " . $e->getMessage());
+            \core\logger\Logger::error("getting all cards: " . $e->getMessage());
             return [];
         }
     }
 
-    public function getCard(int $id): ?CardData
+    public function getCard(int $id, int $userId): ?CardData
     {
         try {
-            $card = $this->query("SELECT * FROM $this->table WHERE id = ?", [$id])->fetch()->toArray();
-            return new CardData($card["id"], $card["title"], $card["details"]);
+            $row = $this->query(
+                "SELECT * FROM {$this->table} WHERE id = ? AND userId = ?",
+                [$id, $userId]
+            )->fetch();
+            if ($row === null) return null;
+            $c = $row->toArray();
+            return new CardData($c["id"], $c["title"], $c["details"]);
         } catch (SqlException $e) {
-            Logger::error("getting card: " . $e->getMessage());
             return null;
         }
-
     }
 
-    public function addCard(CardDraftData $draft): ?CardData
+    public function addCard(CardDraftData $draft, int $userId): ?CardData
     {
         try {
-            $this->query("INSERT INTO {$this->table} (title, details) VALUES (?,?)", [$draft->title, $draft->details])->update();
-            $card = $this->query("SELECT * FROM {$this->table} where title = ? and details = ?", [$draft->title, $draft->details])->fetch()->toArray();
-
-            return new CardData($card["id"], $card["title"], $card["details"]);
+            $this->query(
+                "INSERT INTO {$this->table} (title, details, userId) VALUES (?,?,?)",
+                [$draft->title, $draft->details, $userId]
+            )->update();
+            $row = $this->query(
+                "SELECT * FROM {$this->table} WHERE id = last_insert_rowid()"
+            )->fetch();
+            if ($row === null) return null;
+            $c = $row->toArray();
+            return new CardData($c["id"], $c["title"], $c["details"]);
         } catch (SqlException $e) {
-            Logger::error("adding card: " . $e->getMessage());
+            return null;
         }
-
-        return null;
     }
 
-    public function updateCard(int $id, CardDraftData $draft): bool
+    public function updateCard(int $id, CardDraftData $draft, int $userId): bool
     {
         try {
-            $this->query("UPDATE $this->table SET title =?, details =? WHERE id =?", [$draft->title, $draft->details, $id])->update();
+            $this->query(
+                "UPDATE {$this->table} SET title=?, details=? WHERE id=? AND userId=?",
+                [$draft->title, $draft->details, $id, $userId]
+            )->update();
             return true;
         } catch (SqlException $e) {
-            Logger::error("updating card: " . $e->getMessage());
+            return false;
         }
-
-        return false;
     }
 
-    public function deleteCard(int $id): bool
+    public function deleteCard(int $id, int $userId): bool
     {
         try {
-            $this->query("DELETE FROM $this->table WHERE id =?", [$id])->update();
+            $this->query(
+                "DELETE FROM {$this->table} WHERE id=? AND userId=?",
+                [$id, $userId]
+            )->update();
             return true;
         } catch (SqlException $e) {
-            Logger::error("deleting card: " . $e->getMessage());
+            return false;
         }
-
-        return false;
     }
 }

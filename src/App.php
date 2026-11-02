@@ -1,11 +1,16 @@
 <?php
 
 
+use core\auth\Auth;
 use core\logger\Logger;
 use php\http\{HttpServer, HttpServerRequest, HttpServerResponse};
 use repository\account\AccountDBRepository;
 use repository\card\CardDBRepository;
+use repository\session\SessionRepository;
 use routes\account\CreateAccount;
+use routes\account\LoginAccount;
+use routes\account\LogoutAccount;
+use routes\account\MeAccount;
 use routes\statics\StaticRoutes;
 use repository\task\{TaskDBRepository, TaskMemoryRepository, TaskRepository};
 use routes\card\{CreateCard, DeleteCard, GetAllCard, GetByIdCard, UpdateCard};
@@ -28,6 +33,8 @@ class App
 
     private $accountRepository;
 
+    private $sessionRepository;
+
     /**
      * @var Routes
      */
@@ -36,6 +43,11 @@ class App
      * @var HttpServer
      */
     private $server;
+
+    /**
+     * @var Auth
+     */
+    private $auth;
 
     public function run()
     {
@@ -69,26 +81,28 @@ class App
     {
         $this->routes->register(new StaticRoutes());
 
+        // accounts
+        $this->routes->register(new CreateAccount($this->accountRepository));
+        $this->routes->register(new LoginAccount($this->auth));
+        $this->routes->register(new LogoutAccount($this->auth));
+        $this->routes->register(new MeAccount($this->auth));
+
         // cards
-        $this->routes->register(new CreateCard($this->cardRepository));
-        $this->routes->register(new DeleteCard($this->cardRepository));
-        $this->routes->register(new GetAllCard($this->cardRepository));
-        $this->routes->register(new GetByIdCard($this->cardRepository));
-        $this->routes->register(new UpdateCard($this->cardRepository));
+        $this->routes->register(new CreateCard($this->cardRepository, $this->auth));
+        $this->routes->register(new DeleteCard($this->cardRepository, $this->auth));
+        $this->routes->register(new GetAllCard($this->cardRepository, $this->auth));   // ← строка 87
+        $this->routes->register(new GetByIdCard($this->cardRepository, $this->auth));
+        $this->routes->register(new UpdateCard($this->cardRepository, $this->auth));
 
         // tasks
-        $this->routes->register(new GetAllTask($this->taskRepository));
-        $this->routes->register(new GetByIdTask($this->taskRepository));
-        $this->routes->register(new CreateTask($this->taskRepository));
-        $this->routes->register(new UpdateTask($this->taskRepository));
-        $this->routes->register(new DeleteTask($this->taskRepository));
-        $this->routes->register(new GetTaskForCard($this->taskRepository));
+        $this->routes->register(new GetAllTask($this->taskRepository, $this->auth));
+        $this->routes->register(new GetByIdTask($this->taskRepository, $this->auth));
+        $this->routes->register(new CreateTask($this->taskRepository, $this->auth));
+        $this->routes->register(new UpdateTask($this->taskRepository, $this->auth));
+        $this->routes->register(new DeleteTask($this->taskRepository, $this->auth));
+        $this->routes->register(new GetTaskForCard($this->taskRepository, $this->auth));
 
-        // Accounts
-        $this->routes->register(new CreateAccount($this->accountRepository)); // todo test it
-        /*$this->routes->register(new GetByUsernameAccount($this->accountRepository)); // todo test it
-        $this->routes->register(new GetAllAccount($this->accountRepository)); // todo test it
-        $this->routes->register(new UpdateAccount($this->accountRepository)); // todo test it*/
+        // ... twig и '/' без изменений
 
         $loader = new TwigStreamLoader();
         $twig = new TwigEngine($loader);
@@ -102,7 +116,27 @@ class App
         });
 
         foreach ($this->routes->getAllRoutes() as $route) {
-            $this->server->route($route->getMethod(), $route->getPath(), $route);
+            Logger::info("Registering: " . $route->getMethod() . " " . $route->getPath() . " (" . get_class($route) . ")");
+
+            $method = strtoupper($route->getMethod());
+            $path   = $route->getPath();
+
+            switch ($method) {
+                case 'GET':
+                    $this->server->get($path, $route);
+                    break;
+                case 'POST':
+                    $this->server->post($path, $route);
+                    break;
+                case 'PUT':
+                    $this->server->put($path, $route);
+                    break;
+                case 'DELETE':
+                    $this->server->delete($path, $route);
+                    break;
+                default:
+                    $this->server->route($method, $path, $route);
+            }
         }
     }
 
@@ -113,9 +147,12 @@ class App
     {
         $dbFile = "mysqli.db";
 
-        $this->cardRepository = new CardDBRepository($dbFile);
-        $this->taskRepository = new TaskDBRepository($dbFile);
+        $this->cardRepository    = new CardDBRepository($dbFile);
+        $this->taskRepository    = new TaskDBRepository($dbFile);
         $this->accountRepository = new AccountDBRepository($dbFile);
+        $this->sessionRepository = new SessionRepository($dbFile);
+
+        $this->auth = new Auth($this->accountRepository, $this->sessionRepository);
     }
 
     private function errorHandler(Throwable $err, HttpServerRequest $request, HttpServerResponse $response)

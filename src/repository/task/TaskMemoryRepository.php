@@ -36,7 +36,7 @@ class TaskMemoryRepository extends AbstractRepository implements TaskRepository
         });
     }
 
-    public function addTask(TaskDraft $draft): Task
+    public function addTask(TaskDraft $draft, int $userId): Task
     {
         $index = 0;
 
@@ -49,7 +49,7 @@ class TaskMemoryRepository extends AbstractRepository implements TaskRepository
         return $item;
     }
 
-    public function removeTask(int $id): bool
+    public function removeTask(int $id, int $userId): bool
     {
         foreach ($this->itemsList as $key => $toDo) {
             if ($toDo->getId() === $id) {
@@ -62,7 +62,7 @@ class TaskMemoryRepository extends AbstractRepository implements TaskRepository
         return false;
     }
 
-    public function updateTask(int $id, TaskDraft $draft): bool
+    public function updateTask(int $id, TaskDraft $draft, int $userId): bool
     {
         $item = $this->getTask($id);
 
@@ -75,7 +75,7 @@ class TaskMemoryRepository extends AbstractRepository implements TaskRepository
         return true;
     }
 
-    public function getTaskForCard(int $cardId): array
+    public function getTaskForCard(int $cardId, int $userId): array
     {
         return array_filter($this->itemsList,
             fn($item) => $item->getCardId() === $cardId);

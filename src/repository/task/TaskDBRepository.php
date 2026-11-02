@@ -38,33 +38,55 @@ class TaskDBRepository extends SqliteRepository implements TaskRepository
 
     public function getTask(int $id): ?Task
     {
-        // TODO: Implement getToDo() method.
-        Logger::info(__METHOD__);
+        $row = $this->query(
+            "SELECT t.* FROM {$this->table} t
+         INNER JOIN cards c ON c.id = t.cardId
+         WHERE t.id = ? AND c.userId = ?",
+            [$id, $userId]
+        )->fetch();
+        if ($row === null) return null;
+        $i = $row->toArray();
+        return new Task((int)$i["id"], $i["task"], (bool)$i["done"], (int)$i["cardId"]);
     }
 
-    public function addTask(TaskDraft $draft): Task
+    public function addTask(TaskDraft $draft, int $userId): Task
     {
-        $result = $this->query("INSERT INTO {$this->table} (task, done, cardId) values (?,?,?)", [$draft->title, $draft->done, $draft->cardId])->update();
-        // todo check $result on > 0 ???
-
-
-        $item = $this->query("SELECT * FROM {$this->table} where task=? and cardId=?", [$draft->title, $draft->cardId])->fetch();
-
-        if ($item == null) {
-            throw new \Exception("Not found last inserted task");
+        $check = $this->query(
+            "SELECT 1 FROM cards WHERE id=? AND userId=?",
+            [$draft->cardId, $userId]
+        )->fetch();
+        if ($check === null) {
+            throw new \Exception("Card not found or access denied");
         }
 
-        $item = $item->toArray();
-        return new Task($item["id"], $item["task"], (bool)$item["done"], $item["cardId"]);
+        $this->query(
+            "INSERT INTO {$this->table} (task, done, cardId) VALUES (?,?,?)",
+            [$draft->title, $draft->done ? 1 : 0, $draft->cardId]
+        )->update();
+
+        $row = $this->query(
+            "SELECT * FROM {$this->table} WHERE id = last_insert_rowid()"
+        )->fetch();
+
+        if ($row === null) {
+            throw new \Exception("Cannot find inserted task");
+        }
+
+        $i = $row->toArray();
+        return new Task((int)$i["id"], $i["task"], (bool)$i["done"], (int)$i["cardId"]);
     }
 
-    public function removeTask(int $id): bool
+    public function removeTask(int $id, int $userId): bool
     {
-        // TODO: Implement removeTodo() method.
-        Logger::info(__METHOD__);
+        $this->query(
+            "DELETE FROM {$this->table}
+         WHERE id = ? AND cardId IN (SELECT id FROM cards WHERE userId = ?)",
+            [$id, $userId]
+        )->update();
+        return true;
     }
 
-    public function updateTask(int $id, TaskDraft $draft): bool
+    public function updateTask(int $id, TaskDraft $draft, int $userId): bool
     {
         try {
             return (bool)$this->query("UPDATE {$this->table} SET task=?, done=? WHERE id=? and cardId = ?", [$draft->title, $draft->done, $id, $draft->cardId])->update();
@@ -74,11 +96,19 @@ class TaskDBRepository extends SqliteRepository implements TaskRepository
         }
     }
 
-    public function getTaskForCard(int $cardId): array
+    public function getTaskForCard(int $cardId, int $userId): array
     {
-        return flow($this->query("SELECT * FROM {$this->table} WHERE cardId=?", [$cardId]))->map(function ($item) {
-            $item = $item->toArray();
-            return new Task($item["id"], $item["task"], (bool)$item["done"], $item["cardId"]);
+        // проверка через join с cards
+        return flow(
+            $this->query(
+                "SELECT t.* FROM {$this->table} t
+             INNER JOIN cards c ON c.id = t.cardId
+             WHERE t.cardId = ? AND c.userId = ?",
+                [$cardId, $userId]
+            )
+        )->map(function ($item) {
+            $i = $item->toArray();
+            return new Task($i["id"], $i["task"], (bool)$i["done"], $i["cardId"]);
         })->toArray();
     }
 }

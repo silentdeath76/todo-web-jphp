@@ -10,7 +10,7 @@ class AccountDraftData
     public $password;
     public $email;
     public $role;
-    public $updated_ad;
+    public $updated_at;
 
     /**
      * @param $username
@@ -24,7 +24,7 @@ class AccountDraftData
         $this->password = $password;
         $this->email = $email;
         $this->role = $role;
-        $this->updated_ad = time();
+        $this->updated_at = time();
     }
 
 
